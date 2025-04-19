@@ -1,73 +1,97 @@
-import random
+import math
 
-Gooddata=[[.5,.5],[1,1],[.1,.1],[.5,.55],[.85,.9]]
-BadData=[[1,0],[0,1],[.3,.7],[.1,.3],[.7,1]]
+#Edges store the function between the vertecies, characterized by a vector of floating points
+class Edge:
+    def __init__(self,node1,node2,parameters):
+        self.node1=node1
+        self.node2=node2
+        self.parameters=parameters
+    def run(self):
+        #Assuming that the function is a polynomial with terms indexed 1,x,x^2,...
+        for x in range(0,len(self.parameters)):
+            self.node2.value=self.node2.value+self.parameters[x]*(self.node1.value**x)
 
+#Not sure if I need a class for this, but whatever
 class Node:
-    def __init__(self,Nodes,nextas,nextbs):
+    def __init__(self,value):
+        self.value=value
+
+class Graph:
+    def __init__(self,Nodes,Edges):
         self.Nodes=Nodes
-        self.a=nextas
-        self.b=nextbs
-    value=0.0
-    def __str__(self):
-        return f"{self.a},{self.b}"
+        self.Edges=Edges
+    def zero(self):
+        for x in self.Nodes:
+            x.value=0
+    def run(self):
+        for x in self.Edges:
+            x.run()
+    def set(self,nums):
+        for x in range(0,len(nums)):
+            self.Nodes[x].value=nums[x]
 
-class Value:
-    def __init__(self,val):
-        self.value=val
+class Net(Graph):
+    def __init__(self, numOfNodes,numOfPartitions, numOfParameters):
+        self.numOfNodes=numOfNodes
+        self.numOfPartitions=numOfPartitions
+        self.numOfParameters=numOfParameters
+        super().__init__([],[])
+        self.Nodes=[0]*(numOfNodes*numOfPartitions+1)
+        for x in range(0,numOfNodes*numOfPartitions+1):
+            self.Nodes[x]=Node(0)
+        self.Edges=[0]*(numOfNodes*numOfNodes*(numOfPartitions-1)+numOfNodes)
+        for x in range(0,numOfPartitions-1):
+            for y in range(0,numOfNodes):
+                for z in range(0,numOfNodes):
+                    self.Edges[x*numOfNodes*numOfNodes+y*numOfNodes+z]=Edge(self.Nodes[x*numOfNodes+y],self.Nodes[(x+1)*numOfNodes+z],([0]*numOfParameters))
+                    for k in range(0,numOfParameters):
+                        if(k==1 and y==z):
+                            self.Edges[x*numOfNodes*numOfNodes+y*numOfNodes+z].parameters[k]=1
+                        else:
+                            self.Edges[x*numOfNodes*numOfNodes+y*numOfNodes+z].parameters[k]=0
+        for x in range(0,numOfNodes):
+            self.Edges[x+numOfNodes*numOfNodes*(numOfPartitions-1)]=Edge(self.Nodes[numOfNodes*(numOfPartitions-1)+x],self.Nodes[numOfNodes*numOfPartitions],([0]*numOfParameters))
+            for k in range(0,numOfParameters):
+                if(k==1):
+                    self.Edges[x+numOfNodes*numOfNodes*(numOfPartitions-1)].parameters[k]=1
+                else:
+                    self.Edges[x+numOfNodes*numOfNodes*(numOfPartitions-1)].parameters[k]=0
 
-def zero(Nodes):
-    for x in Nodes:
-        x.value=0.0
-def run(Nodes):
-    for x in Nodes:
-        for y in x:
-            for z in range(0,len(y.Nodes)):
-                y.Nodes[z].value=(y.a[z])*(y.value)+y.Nodes[z].value+y.b[z]
+
+    def run(self):
+            super().run()
 
 
-out=Node([],[],[])
-h1=Node([out],[.5],[0.0])
-h2=Node([out],[.5],[0.0])
-n1=Node([h1,h2],[.5,.5],[0.0,0.0])
-n2=Node([h1,h2],[.5,.5],[0.0,0.0])
-StartingNodes=[n1,n2]
-HiddenNodes=[h1,h2]
-Nodes=[StartingNodes, HiddenNodes, [out]]
-AllNodes=[n1,n2,h1,h2,out]
-print(n2.Nodes)
+    def inputSet(self,nums):
+        super().zero()
+        for x in range(0,len(nums)):
+            self.Nodes[x].value=nums[x]
+            
 
-product=1
-oldProduct=2.8353685351562503
-rand=0
-index=0
-ab=0
-for y in range(0,100000):    
-    rand=random.uniform(.2*(-.98**y),.2*(.98**y))
-    index=random.randint(0,3)
-    ab=random.randint(0,1)
-    if(ab==0):
-        AllNodes[index].a[0]=AllNodes[index].a[0]+rand
-    else:
-        AllNodes[index].b[0]=AllNodes[index].b[0]+rand
-    for x in Gooddata:
-        zero(AllNodes)
-        n1.value=x[0]
-        n2.value=x[1]
-        run(Nodes)
-        product=product*(1+(out.value-1)**2)
-    for x in BadData:
-        zero(AllNodes)
-        n1.value=x[0]
-        n2.value=x[1]
-        run(Nodes)
-        product=product*(1+(out.value-1)**2)
-    if(product>oldProduct):
-        if(ab==0):
-            AllNodes[index].a[0]=AllNodes[index].a[0]-rand
-        else:
-            AllNodes[index].b[0]=AllNodes[index].b[0]-rand
-    else:
-        oldProduct=product
-    product=1
-print(oldProduct)
+
+
+
+G=Net(8,4,2)
+
+print(G.Nodes[32].value)
+
+G.inputSet([1]*8)
+G.run()
+print(G.Nodes[32].value)
+
+"""
+
+#testing that it works
+one=Node(1)
+two=Node(0)
+E=Edge(one,two,[1])
+G=Graph([one, two], [E])
+G.run()
+print(G.Nodes[1].value)
+G.zero()
+print(G.Nodes[0].value)
+G.set([1,1])
+G.run()
+G.run()
+print(G.Nodes[1].value)
+"""

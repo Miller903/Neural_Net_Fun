@@ -1,35 +1,12 @@
 import random 
 import math
+import Graphs
 
-#Outlining the data that I will use to train the model
-GoodData=[[0.05,.1],[.1,.2],[.2,.4],[.3,.6],[.4,.8],[.5,1]]
-BadData=[[1,1],[1,0],[0,1],[.2,.1],[.4,.4],[.7,.9],[.4,0],[.8,.8],[.1,.6],[0,.5],[.1,.4]]
+G=Graphs()
+G=MakeNet(16,2,3)
 
-#establishing the structure of the neural net. Drawn as a graph, there are two input vertecies fully connected to two hidden vertecies, which are both connected to an output vertex
-Vertecies=[0.0,0.0,0.0,0.0,0.0]
-Edges=[[0,2,0,0,0],[0,3,0,0,0],[1,2,0,0,0],[1,3,0,0,0],[2,4,0,0,0],[3,4,0,0,0]]
-#the first 2 numbers denote which vertecies the edge connects, the last 3 numbers the quadratic function associated with the edge
+"""
 
-#updates the entire graph once the inputs are entered
-def run(Edges,Vertecies):
-    for x in Edges:
-        Vertecies[x[1]]=Vertecies[x[1]]+Vertecies[x[0]]*x[2]+x[3]+Vertecies[x[0]]*x[4]*Vertecies[x[0]]
-
-
-#Reads the output vertex. This number will designate how likely a given data point is to belong to the set of good data. The good data should read all 1s, the bad data all 0s
-def out(Vertecies):
-    if(Vertecies[len(Vertecies)-1]<0):
-        return 0
-    elif(Vertecies[len(Vertecies)-1]>1):
-        return 1
-    return Vertecies[len(Vertecies)-1]
-
-
-#Running the Markov chain
-#I define a product over my training data of the absolute value of the difference between the actual output value and the expected output value
-#The Markov chain randomly changes the edge parameters and computes the new product.
-#If the new product is better, the new parameters are used.
-product=1.0
 oldProduct=100000000
 rand=0.0
 index=[0,2]
@@ -68,7 +45,6 @@ for y in range(1,num):
 
 print(Edges)
 
-"""
 
 Vertecies[0]=.2/.7
 Vertecies[1]=.5/.7
